@@ -47,9 +47,8 @@ public class GraphClientFactory {
         connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
         String body = String.format(
-            "client_id=%s&scope=https://graph.microsoft.com/.default&client_secret=%s&grant_type=client_credentials",
-            clientId, clientSecret
-        );
+                "client_id=%s&scope=https://graph.microsoft.com/.default&client_secret=%s&grant_type=client_credentials",
+                clientId, clientSecret);
 
         try (OutputStream os = connection.getOutputStream()) {
             os.write(body.getBytes(StandardCharsets.UTF_8));
@@ -65,11 +64,11 @@ public class GraphClientFactory {
     }
 
     /**
-     * Call Microsoft Graph API with the access token and return both headers and body.
+     * Call Microsoft Graph API with the access token and return both headers and
+     * body.
      */
     public GraphApiResponse callGraphApiWithHeaders(String endpoint, Optional<Integer> threadId) throws Exception {
 
-        
         String accessToken = getAccessToken();
 
         // GET
@@ -87,84 +86,81 @@ public class GraphClientFactory {
         connection.setDoOutput(true);
 
         String jsonBody = """
-                          {
-                            "requests": [
-                                {
-                                    "id": "1",
-                                    "method": "GET",
-                                    "url": "/sites/root"
-                                },
-                                {
-                                    "id": "2",
-                                    "dependsOn": [ "1" ],
-                                    "method": "GET",
-                                    "url": "/sites/root"
-                                },
-                                {
-                                    "id": "3",
-                                    "dependsOn": [ "2" ],
-                                    "method": "GET",
-                                    "url": "/sites/root"
-                                },
-                                {
-                                    "id": "4",
-                                    "dependsOn": [ "3" ],
-                                    "method": "GET",
-                                    "url": "/sites/root"
-                                },
-                                {
-                                    "id": "5",
-                                    "dependsOn": [ "4" ],
-                                    "method": "GET",
-                                    "url": "/sites/root"
-                                },
-                                {
-                                    "id": "6",
-                                    "dependsOn": [ "5" ],
-                                    "method": "GET",
-                                    "url": "/sites/root"
-                                },
-                                {
-                                    "id": "7",
-                                    "dependsOn": [ "6" ],
-                                    "method": "GET",
-                                    "url": "/sites/root"
-                                },
-                                {
-                                    "id": "8",
-                                    "dependsOn": [ "7" ],
-                                    "method": "GET",
-                                    "url": "/sites/root"
-                                },
-                                {
-                                    "id": "9",
-                                    "dependsOn": [ "8" ],
-                                    "method": "GET",
-                                    "url": "/sites/root"
-                                },
-                                {
-                                    "id": "10",
-                                    "dependsOn": [ "9" ],
-                                    "method": "GET",
-                                    "url": "/sites/root"
-                                }
-                            ]
-                          }""";
+                {
+                  "requests": [
+                      {
+                          "id": "1",
+                          "method": "GET",
+                          "url": "/sites/root"
+                      },
+                      {
+                          "id": "2",
+                          "dependsOn": [ "1" ],
+                          "method": "GET",
+                          "url": "/sites/root"
+                      },
+                      {
+                          "id": "3",
+                          "dependsOn": [ "2" ],
+                          "method": "GET",
+                          "url": "/sites/root"
+                      },
+                      {
+                          "id": "4",
+                          "dependsOn": [ "3" ],
+                          "method": "GET",
+                          "url": "/sites/root"
+                      },
+                      {
+                          "id": "5",
+                          "dependsOn": [ "4" ],
+                          "method": "GET",
+                          "url": "/sites/root"
+                      },
+                      {
+                          "id": "6",
+                          "dependsOn": [ "5" ],
+                          "method": "GET",
+                          "url": "/sites/root"
+                      },
+                      {
+                          "id": "7",
+                          "dependsOn": [ "6" ],
+                          "method": "GET",
+                          "url": "/sites/root"
+                      },
+                      {
+                          "id": "8",
+                          "dependsOn": [ "7" ],
+                          "method": "GET",
+                          "url": "/sites/root"
+                      },
+                      {
+                          "id": "9",
+                          "dependsOn": [ "8" ],
+                          "method": "GET",
+                          "url": "/sites/root"
+                      },
+                      {
+                          "id": "10",
+                          "dependsOn": [ "9" ],
+                          "method": "GET",
+                          "url": "/sites/root"
+                      }
+                  ]
+                }""";
         try (OutputStream os = connection.getOutputStream()) {
             os.write(jsonBody.getBytes(StandardCharsets.UTF_8));
         }
         // connection.setRequestProperty("Content-Type", "application/json");
 
-
-
-
         reqCount++;
 
         int retries = 0;
-        int backoffTime = 1;  // 초기 대기 시간 (1초)
-        int maxBackoffTime = 60;  // 최대 대기 시간 (60초)
+        int backoffTime = 1; // 초기 대기 시간 (1초)
+        int maxBackoffTime = 60; // 최대 대기 시간 (60초)
 
-        while (retries < 5) {  // 최대 재시도 횟수 (5번)
+        while (retries < 5) { // 최대 재시도 횟수 (5번)
 
             // 헤더에서 RateLimit 관련 값 추출
             int retryAfter = getRetryAfter(connection);
@@ -172,14 +168,14 @@ public class GraphClientFactory {
             int rateLimitReset = getRateLimitReset(connection);
             int rateLimitRemaining = getRateLimitRemaining(connection);
 
-            if(retryAfter > 0){
+            if (retryAfter > 0) {
                 System.out.println("==============================================");
                 System.out.println("Thread ID: " + threadId.orElse(-1));
                 System.out.println(url.toString());
                 System.out.println("Retry-After: " + retryAfter);
             }
 
-            if(rateLimitLimit > 1){
+            if (rateLimitLimit > 1) {
                 System.out.println("==============================================");
                 System.out.println("Thread ID: " + threadId.orElse(-1));
                 System.out.println(url.toString());
@@ -212,7 +208,7 @@ public class GraphClientFactory {
             // RateLimit-Remaining이 20(프로세스 수)이면 대기 후 재시도
             if (rateLimitRemaining > 0 && rateLimitRemaining <= 20) {
                 System.out.println("Rate limit exceeded. Waiting for " + rateLimitReset + " seconds...");
-                waitForRateLimitReset(rateLimitReset);  // 지정된 시간 동안 대기
+                waitForRateLimitReset(rateLimitReset); // 지정된 시간 동안 대기
 
                 // 재시도
                 connection = (HttpURLConnection) url.openConnection();
@@ -221,15 +217,15 @@ public class GraphClientFactory {
                 reqCount++;
 
                 retries++;
-                backoffTime = Math.min(backoffTime * 2, maxBackoffTime);  // 지수적으로 증가 (최대값 60초)
+                backoffTime = Math.min(backoffTime * 2, maxBackoffTime); // 지수적으로 증가 (최대값 60초)
             } else {
-                break;  // Rate limit 초과가 아니면 루프 종료
+                break; // Rate limit 초과가 아니면 루프 종료
             }
         }
 
         if (retries == 5) {
             System.err.println("Exceeded maximum retries for waiting on rate limit reset.");
-            return null;  
+            return null;
         }
 
         if (connection.getResponseCode() == 200) {
@@ -237,7 +233,7 @@ public class GraphClientFactory {
             String responseBody = new String(connection.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
 
             // Post 일때는 항상 200 으로 옴
-            if (responseBody.contains(":429")){
+            if (responseBody.contains(":429")) {
                 System.out.println("Response Body: " + responseBody);
                 printRateLimit(rateLimitInfos);
                 return null;
@@ -253,13 +249,13 @@ public class GraphClientFactory {
             System.err.println("Response Headers: " + gson.toJson(responseHeaders));
 
             printRateLimit(rateLimitInfos);
-            
+
             return null;
         }
     }
 
     private void printRateLimit(Map<Integer, Map<String, Integer>> rateLimitInfos) {
-        System.out.println("//////////////////////////////////////////////////////"); 
+        System.out.println("//////////////////////////////////////////////////////");
         rateLimitInfos.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach((entry) -> {
             int id = entry.getKey();
             System.out.println("{");
@@ -304,20 +300,20 @@ public class GraphClientFactory {
         Map<String, List<String>> headers = connection.getHeaderFields();
         List<String> values = headers.get(headerName);
 
-        if(headers.size() > 10){
-            
+        if (headers.size() > 10) {
+
             if (values != null && !values.isEmpty()) {
-                return values.get(0);  // 첫 번째 값 반환 (일반적으로 하나의 값만 있음)
+                return values.get(0); // 첫 번째 값 반환 (일반적으로 하나의 값만 있음)
             }
         }
-        return "-1";  // 값이 없으면 기본값 -1 반환(null 로 간주)
+        return "-1"; // 값이 없으면 기본값 -1 반환(null 로 간주)
     }
 
     // RateLimit-Reset 값에 맞춰 대기하는 함수
     private void waitForRateLimitReset(int resetTimeInSeconds) {
         try {
             System.out.println("Waiting for " + resetTimeInSeconds + " seconds before retrying...");
-            TimeUnit.SECONDS.sleep(resetTimeInSeconds);  // 설정된 시간 동안 대기
+            TimeUnit.SECONDS.sleep(resetTimeInSeconds); // 설정된 시간 동안 대기
             System.out.println("Wait time over. You can now retry.");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -346,7 +342,8 @@ public class GraphClientFactory {
      * Parse the access token from the JSON response.
      */
     private String parseAccessToken(String jsonResponse) {
-        // Simple parsing logic (use a JSON library like Jackson or Gson for production code)
+        // Simple parsing logic (use a JSON library like Jackson or Gson for production
+        // code)
         int startIndex = jsonResponse.indexOf("\"access_token\":\"") + 16;
         int endIndex = jsonResponse.indexOf("\"", startIndex);
         return jsonResponse.substring(startIndex, endIndex);

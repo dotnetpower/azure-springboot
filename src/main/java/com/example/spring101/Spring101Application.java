@@ -42,69 +42,69 @@ public class Spring101Application implements CommandLineRunner {
 	public void run(String... args) throws Exception {
 
 		// Load properties file and set properties used throughout the sample
-        Properties properties = new Properties();
-        properties.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("application.properties"));
+		Properties properties = new Properties();
+		properties.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("application.properties"));
 
-      
 		GraphClientFactory factory = new GraphClientFactory(
-            properties.getProperty("TENANT_ID"),
-            properties.getProperty("CLIENT_ID"),
-            properties.getProperty("SECRET"),
-            "https://login.microsoftonline.com"
-        );
+				properties.getProperty("TENANT_ID"),
+				properties.getProperty("CLIENT_ID"),
+				properties.getProperty("SECRET"),
+				"https://login.microsoftonline.com");
 
 		// 병렬 실행을 위한 스레드 풀 생성
 		ExecutorService executorService = Executors.newFixedThreadPool(100); // 10개의 스레드 사용
-		
+
 		AtomicReference<List<String>> results = new AtomicReference<>(new ArrayList<>());
 
 		AtomicBoolean shouldStop = new AtomicBoolean(false);
 		AtomicInteger threadId = new AtomicInteger(0);
 
 		CompletableFuture<?>[] asyncFutures = IntStream.range(0, 1900)
-			.mapToObj(x -> CompletableFuture.runAsync(() -> {
-				try {				
+				.mapToObj(x -> CompletableFuture.runAsync(() -> {
+					try {
 
-					if (shouldStop.get()) return;
+						if (shouldStop.get())
+							return;
 
-					threadId.set(x);
-					
-					GraphApiResponse response = factory.callGraphApiWithHeaders("sites/root", Optional.of(x));
-					if (response == null || formatJson(response.getHeaders()).contains("HTTP/1.1 429")) {
-						shouldStop.set(true);
-						
-						// throw new RuntimeException("Throttling detected or response is null");
+						threadId.set(x);
+
+						GraphApiResponse response = factory.callGraphApiWithHeaders("sites/root", Optional.of(x));
+						if (response == null || formatJson(response.getHeaders()).contains("HTTP/1.1 429")) {
+							shouldStop.set(true);
+
+							// throw new RuntimeException("Throttling detected or response is null");
+						}
+
+						// List<String> headers =
+						// Arrays.asList(formatJson(response.getHeaders()).split("\n"));
+
+						// int maxLines = Math.max(results.get().size(), headers.size());
+
+						// for (int i = 0; i < maxLines; i++) {
+						// String prevLine = i < results.get().size() ? results.get().get(i) : "";
+						// String currLine = i < headers.size() ? headers.get(i) : "";
+
+						// if(!prevLine.equals(currLine)) {
+						// // System.out.println(currLine);
+						// }
+						// }
+
+						// results.set(headers);
+
+						System.out.println("Thread ID: " + x);
+
+					} catch (Exception e) {
+						throw new RuntimeException(e);
 					}
-					
-					// List<String> headers = Arrays.asList(formatJson(response.getHeaders()).split("\n"));
-			
-					// int maxLines = Math.max(results.get().size(), headers.size());
-
-					// for (int i = 0; i < maxLines; i++) {
-					// 	String prevLine = i < results.get().size() ? results.get().get(i) : "";
-					// 	String currLine = i < headers.size() ? headers.get(i) : "";
-
-					// 	if(!prevLine.equals(currLine)) {
-					// 		// System.out.println(currLine);
-					// 	}
-					// }
-						
-					// results.set(headers);
-
-					System.out.println("Thread ID: " + x);	
-
-				} catch (Exception e) {
-					throw new RuntimeException(e);
-				}
-			}, executorService))
-			.toArray(CompletableFuture[]::new);
+				}, executorService))
+				.toArray(CompletableFuture[]::new);
 
 		try {
 			CompletableFuture.allOf(asyncFutures).join();
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, "Error occurred: {0}", e.getMessage());
 		}
-		//executorService.shutdown();
+		// executorService.shutdown();
 
 		System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 
@@ -112,9 +112,11 @@ public class Spring101Application implements CommandLineRunner {
 		IntStream.range(0, 5000).forEach(x -> {
 			try {
 				threadId.set(threadId.get() + 1);
-				GraphApiResponse response = factory.callGraphApiWithHeaders("sites/root", Optional.of((int)threadId.get()));
-				// if (response == null || formatJson(response.getHeaders()).contains("HTTP/1.1 429")) {
-				// 	throw new RuntimeException("Throttling detected or response is null");
+				GraphApiResponse response = factory.callGraphApiWithHeaders("sites/root",
+						Optional.of((int) threadId.get()));
+				// if (response == null || formatJson(response.getHeaders()).contains("HTTP/1.1
+				// 429")) {
+				// throw new RuntimeException("Throttling detected or response is null");
 				// }
 
 				System.out.println("Thread ID: " + threadId.get());
@@ -124,7 +126,6 @@ public class Spring101Application implements CommandLineRunner {
 				throw new RuntimeException(e);
 			}
 		});
-
 
 		logger.info("All tasks completed.");
 	}
@@ -137,7 +138,7 @@ public class Spring101Application implements CommandLineRunner {
 
 	String formatJson(Map<String, List<String>> headers) {
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		
+
 		return gson.toJson(headers);
 	}
 
